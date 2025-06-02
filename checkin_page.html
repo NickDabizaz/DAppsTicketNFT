@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMint: My Ticket & Check-in - Summer Blockchain Fest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --primary-accent: #66d7ee;
+            --primary-accent-rgb: 102, 215, 238;
+            --secondary-accent: #ee6d66;
+            --neutral-text: #e4e4e4;
+            --muted-text: #a0a0a0;
+            --card-bg: #161b22;
+            --card-bg-darker: #101419;
+            --border-color: #30363d;
+            --font-main: 'Inter', sans-serif;
+            --success-color: #28a745;
+            --error-color: var(--secondary-accent);
+            --otp-display-bg: var(--card-bg-darker);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--neutral-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container { width: 90%; max-width: 700px; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+        main { flex-grow: 1; }
+
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; margin-bottom: 0.75rem; color: var(--neutral-text); }
+        h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.15; }
+        h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem; }
+        p { margin-bottom: 1rem; color: var(--muted-text); font-size: 1.05rem; }
+        section p { color: var(--neutral-text); opacity: 0.85; }
+        a { color: var(--primary-accent); text-decoration: none; transition: color 0.3s ease; }
+        a:hover, a:focus { color: var(--secondary-accent); outline: 2px solid var(--primary-accent); outline-offset: 2px; }
+        
+        button, .button {
+            display: inline-block; padding: 0.85rem 1.75rem; font-family: var(--font-main); font-size: 1rem;
+            font-weight: 600; text-align: center; text-decoration: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button-primary { background-color: var(--primary-accent); color: var(--bg-color); }
+        .button-primary:hover, .button-primary:focus { transform: scale(1.05) translateY(-2px); background-color: #52c5d6; box-shadow: 0 6px 20px rgba(102, 215, 238, 0.25); }
+        .button-primary:disabled { background-color: var(--muted-text); color: #777; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        section { padding: 5rem 0; }
+        .text-center { text-align: center; }
+
+        /* Navbar Styling */
+        .main-nav {
+            background-color: rgba(13, 17, 23, 0.9); backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); padding: 0.75rem 0; position: fixed;
+            top: 0; left: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border-color);
+        }
+        .main-nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-size: 1.85rem; font-weight: 800; color: var(--neutral-text); }
+        .nav-logo a { color: inherit; transition: color 0.3s ease; }
+        .nav-logo a:hover, .nav-logo a:focus { color: var(--primary-accent); outline: none; }
+        .nav-links { list-style: none; display: flex; align-items: center; gap: 1rem; }
+        .nav-links li { margin-left: 0; }
+        .nav-links a { font-weight: 600; color: var(--muted-text); padding: 0.5rem 0.75rem; border-bottom: 2px solid transparent; transition: color 0.3s ease, border-bottom-color 0.3s ease; }
+        .nav-links a:hover, .nav-links a:focus, .nav-links a.active { color: var(--primary-accent); border-bottom-color: var(--primary-accent); }
+        
+        .wallet-display-container { position: relative; }
+        .wallet-button {
+            background-color: var(--primary-accent); color: var(--bg-color);
+            padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        .wallet-button:hover { background-color: #52c5d6; }
+        .wallet-button .address { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dropdown-menu {
+            display: none; position: absolute; top: calc(100% + 10px); right: 0;
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001; min-width: 160px; overflow: hidden;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { padding: 0.75rem 1rem; color: var(--neutral-text); text-decoration: none; display: block; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease; }
+        .dropdown-item:hover { background-color: var(--card-bg-darker); color: var(--primary-accent); }
+        .nav-toggle { display: none; background: none; border: none; color: var(--neutral-text); font-size: 1.5rem; cursor: pointer; }
+
+        /* Check-in Page Specific Styles */
+        .checkin-section {
+            padding-top: 8rem; /* Account for sticky nav */
+            padding-bottom: 4rem;
+            text-align: center;
+        }
+        .checkin-card {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .checkin-card h1 {
+            color: var(--primary-accent);
+            margin-bottom: 1rem;
+        }
+        .checkin-card .lead-message {
+            font-size: 1.15rem;
+            color: var(--muted-text);
+            margin-bottom: 2.5rem;
+        }
+
+        .ticket-display-area {
+            background-color: var(--card-bg-darker);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .ticket-display-area h2 {
+            color: var(--primary-accent);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .ticket-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1rem;
+        }
+        .ticket-info-item:last-child { border-bottom: none; }
+        .ticket-info-item .label { color: var(--muted-text); font-weight: 500; }
+        .ticket-info-item .value { color: var(--neutral-text); font-weight: 600; }
+        
+        .nft-visual-simple {
+            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+            color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem auto;
+            max-width: 300px; /* Control size */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .nft-visual-simple h4 { font-size: 1.1rem; margin-bottom: 0.3rem; color: var(--bg-color); }
+        .nft-visual-simple p { font-size: 0.85rem; margin-bottom: 0.2rem; opacity: 0.9; color: var(--bg-color); }
+
+        .otp-display-area {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            background-color: var(--otp-display-bg);
+            border-radius: 12px;
+            border: 1px solid var(--primary-accent);
+        }
+        .otp-code {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-accent);
+            letter-spacing: 0.5rem; /* Space out digits */
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .otp-timer {
+            font-size: 1rem;
+            color: var(--muted-text);
+        }
+        .otp-timer strong { color: var(--secondary-accent); }
+
+        .checkin-actions { margin-top: 2rem; }
+        .checkin-actions .button { width: 100%; max-width: 350px; padding: 1rem; font-size: 1.1rem; }
+
+        .no-ticket-message {
+            padding: 2rem;
+            background-color: var(--card-bg-darker);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .no-ticket-message p { font-size: 1.1rem; margin-bottom: 1.5rem; }
+
+        /* Footer Styling */
+        .main-footer { background-color: var(--bg-color); padding: 4rem 0 2rem; text-align: center; border-top: 1px solid var(--border-color); }
+        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
+        .footer-links { list-style: none; padding: 0; display: flex; gap: 1.75rem; flex-wrap: wrap; justify-content: center; }
+        .footer-links a { color: var(--muted-text); font-weight: 400; }
+        .footer-links a:hover, .footer-links a:focus { color: var(--primary-accent); }
+        .social-icons { display: flex; gap: 1.25rem; }
+        .social-icons a { font-size: 1.6rem; color: var(--muted-text); transition: color 0.3s ease, transform 0.3s ease; }
+        .social-icons a:hover, .social-icons a:focus { color: var(--primary-accent); transform: scale(1.15) translateY(-2px); outline: none; }
+        .social-icons svg { width: 24px; height: 24px; fill: currentColor; }
+        .copyright { font-size: 0.9rem; color: var(--muted-text); opacity: 0.7; }
+        
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background-color: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; opacity: 0; visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .toast-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0px); }
+        .toast-notification.error { background-color: var(--error-color); color: var(--neutral-text); }
+
+        /* Responsive Adjustments */
+         @media (max-width: 768px) { /* Mobile */
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.6rem; }
+            .main-nav .container { position: relative; }
+            .nav-toggle { display: block; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); }
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; width: 100%; background-color: var(--bg-color); padding: 1rem 0; border-top: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+            .nav-links.active { display: flex; }
+            .nav-links li { margin-left: 0; width: 100%; text-align: center; }
+            .nav-links a { display: block; padding: 1rem; border-bottom: 1px solid var(--border-color); }
+            .nav-links a:hover, .nav-links a:focus, .nav-links a.active { border-bottom: 1px solid var(--primary-accent); }
+            .nav-links .button, .wallet-display-container { margin: 1rem auto 0; } 
+
+            .checkin-section { padding-top: 7rem; }
+            .checkin-card { padding: 1.5rem; }
+            .otp-code { font-size: 2.5rem; letter-spacing: 0.3rem;}
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="main-nav" id="main-header" data-aos="fade-down" data-aos-duration="800">
+        <div class="container">
+            <div class="nav-logo">
+                <a href="index.html" aria-label="TicketMint Home">TicketMint</a> 
+            </div>
+            <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">
+                &#9776; 
+            </button>
+            <nav>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="index.html#faq">FAQ</a></li> 
+                    <li id="wallet-nav-item-checkin">
+                        <button class="button button-primary" id="connectWalletNavButtonCheckin">Connect Wallet</button>
+                        <div class="wallet-display-container" id="walletDisplayContainerCheckin" style="display: none;">
+                            <button class="wallet-button" id="walletDropdownButtonCheckin" aria-expanded="false" aria-controls="walletDropdownMenuCheckin">
+                                <span class="address" id="walletAddressDisplayCheckin"></span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-left: 5px;">
+                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu" id="walletDropdownMenuCheckin">
+                                <a href="#" class="dropdown-item" id="logoutButtonCheckin">Logout</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="checkin-section" id="myTicketPage">
+            <div class="container">
+                <div class="checkin-card" data-aos="zoom-in-up">
+                    <div id="initialStateView">
+                        <h1>Your Event Ticket & Check-in</h1>
+                        <p class="lead-message" id="leadMessage">Connect your wallet to view your ticket and generate your check-in code for Summer Blockchain Fest.</p>
+                        <button class="button button-primary" id="connectWalletCheckinPageButton" style="font-size: 1.1rem; padding: 1rem 2rem;">Connect Wallet to View Ticket</button>
+                    </div>
+
+                    <div id="ticketHolderView" style="display: none;">
+                        <h1>Your Ticket for Summer Blockchain Fest</h1>
+                        <div class="ticket-display-area">
+                            <h2>Ticket Details</h2>
+                            <div class="nft-visual-simple">
+                                <h4>Summer Blockchain Fest</h4>
+                                <p>Seat: <strong id="ticketSeatNumber">-</strong></p>
+                                <p>Owner: <strong id="ticketOwnerName">-</strong></p>
+                            </div>
+                            <div class="ticket-info-item">
+                                <span class="label">Event:</span>
+                                <span class="value">Summer Blockchain Fest</span>
+                            </div>
+                            <div class="ticket-info-item">
+                                <span class="label">Date:</span>
+                                <span class="value">July 20, 2025</span>
+                            </div>
+                            <div class="ticket-info-item">
+                                <span class="label">Venue:</span>
+                                <span class="value">NYC Expo Center</span>
+                            </div>
+                            <div class="ticket-info-item">
+                                <span class="label">Ticket Holder:</span>
+                                <span class="value" id="displayTicketHolder">-</span>
+                            </div>
+                            <div class="ticket-info-item">
+                                <span class="label">Seat Number:</span>
+                                <span class="value" id="displaySeatNumber">-</span>
+                            </div>
+                        </div>
+                        <div class="checkin-actions">
+                            <button class="button button-primary" id="generateOtpButton">Generate OTP for Check-in</button>
+                        </div>
+                    </div>
+
+                    <div id="otpView" style="display: none;">
+                        <h1>Your Check-in Code</h1>
+                        <p class="lead-message">Show this code to the event staff for entry. This code is valid for a limited time.</p>
+                        <div class="otp-display-area">
+                            <div class="otp-code" id="otpCodeDisplay">123456</div>
+                            <p class="otp-timer">Expires in: <strong id="otpTimerDisplay">60</strong> seconds</p>
+                        </div>
+                         <div class="checkin-actions">
+                            <button class="button button-secondary" id="regenerateOtpButton" style="display:none;">Regenerate Code</button>
+                        </div>
+                    </div>
+
+                    <div id="noTicketView" style="display: none;" class="no-ticket-message">
+                        <h2>No Ticket Found</h2>
+                        <p>We couldn't find a ticket for Summer Blockchain Fest associated with the connected wallet address.</p>
+                        <a href="booking.html" class="button button-primary">Book Your Ticket Now</a> 
+                        </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <ul class="footer-links">
+                    <li><a href="index.html#about-us">About TicketMint</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="index.html#faq">Support Center</a></li>
+                </ul>
+                <div class="social-icons">
+                     <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+                    <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on Telegram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.002 8.6c-.145 1.322-.793 4.43-1.122 5.912-.292 1.31-.863 1.747-1.454 1.773-.878.04-1.424-.487-2.23-1.003-.92-.59-1.453-.953-2.27-1.528-.91-.638-.32-1.003.197-1.578.13-.145.953-1.018 1.018-1.103.13-.13.26-.015.086.086-.52.472-1.424 1.263-1.65 1.453-.21.174-.406.245-.682.16-.32-.1-.606-.245-.882-.406-.39-.23-.584-.35-.584-.752.014-.337.174-.666.98-1.23 2.08-1.438 3.487-2.308 3.916-2.563.086-.057.292-.13.42-.13.115 0 .19.014.246.043.07.03.085.07.085.16-.014.144-.043.39-.086.52z"></path></svg>
+                    </a>
+                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on GitHub">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.166 6.839 9.489.5.09.682-.218.682-.484 0-.238-.009-.868-.013-1.703-2.782.602-3.369-1.34-3.369-1.34-.455-1.158-1.11-1.468-1.11-1.468-.908-.62.069-.608.069-.608 1.004.071 1.532 1.03 1.532 1.03.891 1.529 2.341 1.089 2.91.833.091-.647.349-1.086.635-1.337-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.682-.103-.254-.446-1.27.098-2.644 0 0 .84-.269 2.75 1.025A9.549 9.549 0 0 1 12 6.817c.85.004 1.705.115 2.504.338 1.91-1.294 2.748-1.025 2.748-1.025.546 1.374.203 2.39.099 2.644.64.698 1.028 1.591 1.028 2.682 0 3.842-2.337 4.687-4.565 4.935.358.307.678.917.678 1.849 0 1.334-.012 2.41-.012 2.736 0 .269.18.579.688.481A10.001 10.001 0 0 0 22 12c0-5.523-4.477-10-10-10z"></path></svg>
+                    </a>
+                </div>
+                <p class="copyright">&copy; 2025 TicketMint. Revolutionizing Event Access.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toastNotification" class="toast-notification" role="alert" aria-live="assertive"></div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        const navToggle = document.querySelector('.nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', () => {
+                const isExpanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
+                navToggle.setAttribute('aria-expanded', !isExpanded);
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // Wallet Connection and Display Logic
+        const connectWalletNavButton = document.getElementById('connectWalletNavButtonCheckin');
+        const walletDisplayContainer = document.getElementById('walletDisplayContainerCheckin');
+        const walletAddressDisplay = document.getElementById('walletAddressDisplayCheckin');
+        const walletDropdownButton = document.getElementById('walletDropdownButtonCheckin');
+        const walletDropdownMenu = document.getElementById('walletDropdownMenuCheckin');
+        const logoutButton = document.getElementById('logoutButtonCheckin');
+        const connectWalletPageButton = document.getElementById('connectWalletCheckinPageButton');
+        
+        const initialStateView = document.getElementById('initialStateView');
+        const ticketHolderView = document.getElementById('ticketHolderView');
+        const otpView = document.getElementById('otpView');
+        const noTicketView = document.getElementById('noTicketView');
+        
+        const displayTicketHolder = document.getElementById('displayTicketHolder');
+        const displaySeatNumber = document.getElementById('displaySeatNumber');
+        const nftTicketSeatNumber = document.getElementById('ticketSeatNumber');
+        const nftTicketOwnerName = document.getElementById('ticketOwnerName');
+
+        const generateOtpButton = document.getElementById('generateOtpButton');
+        const otpCodeDisplay = document.getElementById('otpCodeDisplay');
+        const otpTimerDisplay = document.getElementById('otpTimerDisplay');
+        const regenerateOtpButton = document.getElementById('regenerateOtpButton');
+
+        let connectedAccount = null; 
+        let otpTimerInterval = null;
+        let otpCountdown = 60;
+
+        // --- Mock User Data (In a real app, this would come from blockchain/backend) ---
+        const userTickets = {
+            // Using a placeholder for demonstration if no localStorage is set
+            "0xabc123def456ghi789jkl0mno123pqr456stu789": { 
+                eventName: "Summer Blockchain Fest",
+                seat: "C7",
+                name: "Demo User"
+            }
+        };
+
+        // Simplified connectWallet for UI/UX demo
+        function connectWalletSimulated() {
+            // Simulate connecting to a wallet
+            connectedAccount = "0xabc123def456ghi789jkl0mno123pqr456stu789"; // Example placeholder address
+            localStorage.setItem('mockWalletAddress', connectedAccount); // Store for demo persistence
+            updateWalletDisplay(connectedAccount);
+            checkTicketStatus();
+            showToast("Wallet connected (Simulated).");
+        }
+        
+        function updateWalletDisplay(account) {
+            if (account) {
+                walletAddressDisplay.textContent = `${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+                connectWalletNavButton.style.display = 'none';
+                walletDisplayContainer.style.display = 'flex';
+                if(connectWalletPageButton) connectWalletPageButton.style.display = 'none';
+            } else {
+                connectWalletNavButton.style.display = 'inline-block';
+                walletDisplayContainer.style.display = 'none';
+                if(walletDropdownMenu) walletDropdownMenu.classList.remove('show');
+                if(walletDropdownButton) walletDropdownButton.setAttribute('aria-expanded', 'false');
+                if(connectWalletPageButton) connectWalletPageButton.style.display = 'block';
+                 showInitialView();
+            }
+        }
+
+        function handleLogout() {
+            connectedAccount = null;
+            localStorage.removeItem('mockWalletAddress');
+            updateWalletDisplay(null);
+            showToast("Logged out successfully.");
+            showInitialView();
+            if(otpView) otpView.style.display = 'none'; 
+            if(regenerateOtpButton) regenerateOtpButton.style.display = 'none';
+            clearInterval(otpTimerInterval);
+        }
+
+        if (connectWalletNavButton) connectWalletNavButton.addEventListener('click', connectWalletSimulated);
+        if (connectWalletPageButton) connectWalletPageButton.addEventListener('click', connectWalletSimulated);
+        if (logoutButton) logoutButton.addEventListener('click', handleLogout);
+        
+        if (walletDropdownButton) {
+            walletDropdownButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isExpanded = walletDropdownButton.getAttribute('aria-expanded') === 'true';
+                walletDropdownButton.setAttribute('aria-expanded', !isExpanded);
+                walletDropdownMenu.classList.toggle('show');
+            });
+        }
+        
+        window.addEventListener('click', function(event) {
+          if (walletDropdownMenu && walletDropdownMenu.classList.contains('show')) {
+            if (!walletDropdownButton.contains(event.target) && !walletDropdownMenu.contains(event.target)) {
+              walletDropdownMenu.classList.remove('show');
+              walletDropdownButton.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
+
+        function showInitialView() {
+            if(initialStateView) initialStateView.style.display = 'block';
+            if(ticketHolderView) ticketHolderView.style.display = 'none';
+            if(otpView) otpView.style.display = 'none';
+            if(noTicketView) noTicketView.style.display = 'none';
+        }
+
+        function checkTicketStatus() {
+            if (!connectedAccount) {
+                showInitialView();
+                return;
+            }
+            // For UI/UX demo, we'll use the mock data directly if the connectedAccount matches
+            const userTicket = userTickets[connectedAccount.toLowerCase()]; 
+
+            if (initialStateView) initialStateView.style.display = 'none';
+
+            if (userTicket) {
+                displayTicketHolder.textContent = userTicket.name;
+                displaySeatNumber.textContent = userTicket.seat;
+                nftTicketOwnerName.textContent = userTicket.name;
+                nftTicketSeatNumber.textContent = userTicket.seat;
+                if(ticketHolderView) ticketHolderView.style.display = 'block';
+                if(noTicketView) noTicketView.style.display = 'none';
+                if(otpView) otpView.style.display = 'none';
+            } else {
+                 // If no ticket for this specific mock address, show "no ticket"
+                const genericMockTicket = userTickets["0xabc123def456ghi789jkl0mno123pqr456stu789"]; // Fallback to show something
+                if(genericMockTicket && connectedAccount === "0xabc123def456ghi789jkl0mno123pqr456stu789") { // Only if it's the specific demo account
+                    displayTicketHolder.textContent = genericMockTicket.name;
+                    displaySeatNumber.textContent = genericMockTicket.seat;
+                    nftTicketOwnerName.textContent = genericMockTicket.name;
+                    nftTicketSeatNumber.textContent = genericMockTicket.seat;
+                    if(ticketHolderView) ticketHolderView.style.display = 'block';
+                    if(noTicketView) noTicketView.style.display = 'none';
+                    if(otpView) otpView.style.display = 'none';
+                } else {
+                    if(noTicketView) noTicketView.style.display = 'block';
+                    if(ticketHolderView) ticketHolderView.style.display = 'none';
+                    if(otpView) otpView.style.display = 'none';
+                }
+            }
+        }
+
+        function generateNewOtp() {
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            otpCodeDisplay.textContent = otp;
+            otpCountdown = 60;
+            otpTimerDisplay.textContent = otpCountdown;
+            
+            clearInterval(otpTimerInterval);
+            otpTimerInterval = setInterval(() => {
+                otpCountdown--;
+                otpTimerDisplay.textContent = otpCountdown;
+                if (otpCountdown <= 0) {
+                    clearInterval(otpTimerInterval);
+                    otpTimerDisplay.textContent = "Expired";
+                    otpCodeDisplay.textContent = "------";
+                    if(generateOtpButton) generateOtpButton.style.display = 'none'; 
+                    if(regenerateOtpButton) regenerateOtpButton.style.display = 'inline-block'; 
+                }
+            }, 1000);
+
+            if(ticketHolderView) ticketHolderView.style.display = 'none';
+            if(otpView) otpView.style.display = 'block';
+            if(generateOtpButton) generateOtpButton.style.display = 'inline-block'; 
+            if(regenerateOtpButton) regenerateOtpButton.style.display = 'none'; 
+        }
+
+        if (generateOtpButton) {
+            generateOtpButton.addEventListener('click', () => {
+                showToast("Generating OTP... (Simulated sign message)", "info");
+                setTimeout(() => { 
+                    generateNewOtp();
+                    showToast("OTP Generated Successfully!");
+                }, 1500);
+            });
+        }
+        if (regenerateOtpButton) {
+            regenerateOtpButton.addEventListener('click', () => {
+                 showToast("Regenerating OTP... (Simulated sign message)", "info");
+                setTimeout(() => { 
+                    generateNewOtp();
+                    showToast("New OTP Generated!");
+                }, 1500);
+            });
+        }
+
+
+        let toastTimeout;
+        function showToast(message, type = "success") { 
+            const toast = document.getElementById('toastNotification');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.className = 'toast-notification'; 
+            if (type === 'error') toast.classList.add('error');
+            else if (type === 'info') toast.style.backgroundColor = 'var(--primary-accent)';
+            else toast.style.backgroundColor = 'var(--success-color)';
+            toast.classList.add('show'); 
+            clearTimeout(toastTimeout); 
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000); 
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedAccount = localStorage.getItem('mockWalletAddress');
+            if (storedAccount) {
+                connectedAccount = storedAccount;
+                updateWalletDisplay(connectedAccount);
+                checkTicketStatus();
+            } else {
+                updateWalletDisplay(null); // Show connect button initially
+                showInitialView();
+            }
+        });
+
+    </script>
+</body>
+</html>

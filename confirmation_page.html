@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMint: Booking Confirmation - Summer Blockchain Fest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --primary-accent: #66d7ee;
+            --primary-accent-rgb: 102, 215, 238;
+            --secondary-accent: #ee6d66;
+            --neutral-text: #e4e4e4;
+            --muted-text: #a0a0a0;
+            --card-bg: #161b22;
+            --card-bg-darker: #101419;
+            --border-color: #30363d;
+            --font-main: 'Inter', sans-serif;
+            --success-color: #28a745; /* Green for success messages */
+            --success-color-light: #d4edda;
+            --success-border-color: #c3e6cb;
+            --error-color: var(--secondary-accent);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--neutral-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .container { width: 90%; max-width: 800px; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; } /* Max width adjusted for confirmation page */
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; margin-bottom: 0.75rem; color: var(--neutral-text); }
+        h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.15; } /* Slightly smaller H1 for confirmation */
+        h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem; }
+        p { margin-bottom: 1rem; color: var(--muted-text); font-size: 1.05rem; }
+        section p { color: var(--neutral-text); opacity: 0.85; }
+        a { color: var(--primary-accent); text-decoration: none; transition: color 0.3s ease; }
+        a:hover, a:focus { color: var(--secondary-accent); outline: 2px solid var(--primary-accent); outline-offset: 2px; }
+        
+        button, .button {
+            display: inline-block; padding: 0.85rem 1.75rem; font-family: var(--font-main); font-size: 1rem;
+            font-weight: 600; text-align: center; text-decoration: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button-primary { background-color: var(--primary-accent); color: var(--bg-color); }
+        .button-primary:hover, .button-primary:focus { transform: scale(1.05) translateY(-2px); background-color: #52c5d6; box-shadow: 0 6px 20px rgba(102, 215, 238, 0.25); }
+        .button-secondary { background-color: transparent; color: var(--primary-accent); border: 2px solid var(--primary-accent); }
+        .button-secondary:hover, .button-secondary:focus { transform: scale(1.05) translateY(-2px); background-color: rgba(102, 215, 238, 0.1); box-shadow: 0 4px 15px rgba(102, 215, 238, 0.1); }
+        
+        section { padding: 5rem 0; }
+        .text-center { text-align: center; }
+
+        /* Navbar Styling (consistent) */
+        .main-nav {
+            background-color: rgba(13, 17, 23, 0.9); backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); padding: 0.75rem 0; position: fixed;
+            top: 0; left: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--border-color);
+        }
+        .main-nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-size: 1.85rem; font-weight: 800; color: var(--neutral-text); }
+        .nav-logo a { color: inherit; transition: color 0.3s ease; }
+        .nav-logo a:hover, .nav-logo a:focus { color: var(--primary-accent); outline: none; }
+        .nav-links { list-style: none; display: flex; align-items: center; gap: 1rem; }
+        .nav-links li { margin-left: 0; }
+        .nav-links a { font-weight: 600; color: var(--muted-text); padding: 0.5rem 0.75rem; border-bottom: 2px solid transparent; transition: color 0.3s ease, border-bottom-color 0.3s ease; }
+        .nav-links a:hover, .nav-links a:focus, .nav-links a.active { color: var(--primary-accent); border-bottom-color: var(--primary-accent); }
+        
+        .wallet-display-container { position: relative; }
+        .wallet-button {
+            background-color: var(--primary-accent); color: var(--bg-color);
+            padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        .wallet-button:hover { background-color: #52c5d6; }
+        .wallet-button .address { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dropdown-menu {
+            display: none; position: absolute; top: calc(100% + 10px); right: 0;
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001; min-width: 160px; overflow: hidden;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { padding: 0.75rem 1rem; color: var(--neutral-text); text-decoration: none; display: block; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease; }
+        .dropdown-item:hover { background-color: var(--card-bg-darker); color: var(--primary-accent); }
+        .nav-toggle { display: none; background: none; border: none; color: var(--neutral-text); font-size: 1.5rem; cursor: pointer; }
+
+        /* Confirmation Page Specific Styles */
+        .confirmation-section {
+            padding-top: 8rem; /* Account for sticky nav */
+            padding-bottom: 4rem;
+            text-align: center;
+        }
+        .confirmation-card {
+            background-color: var(--card-bg);
+            padding: 2.5rem; /* More padding */
+            border-radius: 16px; /* More rounded */
+            border: 1px solid var(--border-color);
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .confirmation-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            margin-bottom: 1rem;
+            animation: popIn 0.5s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .confirmation-card h1 {
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+        }
+        .confirmation-card p.lead {
+            font-size: 1.15rem;
+            color: var(--muted-text);
+            margin-bottom: 2rem;
+        }
+        .ticket-details {
+            background-color: var(--card-bg-darker);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+        .ticket-details h3 {
+            color: var(--primary-accent);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        .detail-item .label {
+            color: var(--muted-text);
+            font-weight: 500;
+        }
+        .detail-item .value {
+            color: var(--neutral-text);
+            font-weight: 600;
+            word-break: break-all; /* For long transaction IDs */
+        }
+        .nft-visual-placeholder {
+            background: linear-gradient(45deg, var(--primary-accent), var(--secondary-accent));
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--bg-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .nft-visual-placeholder h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            color: var(--bg-color);
+        }
+        .nft-visual-placeholder p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+            color: var(--bg-color);
+        }
+        .confirmation-actions {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        .confirmation-actions .button {
+            width: 100%;
+            max-width: 300px; /* Limit button width */
+        }
+
+
+        /* Footer Styling (consistent) */
+        .main-footer { background-color: var(--bg-color); padding: 4rem 0 2rem; text-align: center; border-top: 1px solid var(--border-color); }
+        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
+        .footer-links { list-style: none; padding: 0; display: flex; gap: 1.75rem; flex-wrap: wrap; justify-content: center; }
+        .footer-links a { color: var(--muted-text); font-weight: 400; }
+        .footer-links a:hover, .footer-links a:focus { color: var(--primary-accent); }
+        .social-icons { display: flex; gap: 1.25rem; }
+        .social-icons a { font-size: 1.6rem; color: var(--muted-text); transition: color 0.3s ease, transform 0.3s ease; }
+        .social-icons a:hover, .social-icons a:focus { color: var(--primary-accent); transform: scale(1.15) translateY(-2px); outline: none; }
+        .social-icons svg { width: 24px; height: 24px; fill: currentColor; }
+        .copyright { font-size: 0.9rem; color: var(--muted-text); opacity: 0.7; }
+        
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background-color: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; opacity: 0; visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .toast-notification.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0px); }
+        .toast-notification.error { background-color: var(--error-color); color: var(--neutral-text); }
+
+        /* Responsive Adjustments */
+         @media (max-width: 768px) { /* Mobile */
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.6rem; }
+            .main-nav .container { position: relative; }
+            .nav-toggle { display: block; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); }
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; width: 100%; background-color: var(--bg-color); padding: 1rem 0; border-top: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+            .nav-links.active { display: flex; }
+            .nav-links li { margin-left: 0; width: 100%; text-align: center; }
+            .nav-links a { display: block; padding: 1rem; border-bottom: 1px solid var(--border-color); }
+            .nav-links a:hover, .nav-links a:focus, .nav-links a.active { border-bottom: 1px solid var(--primary-accent); }
+            .nav-links .button, .wallet-display-container { margin: 1rem auto 0; } 
+
+            .confirmation-section { padding-top: 7rem; }
+            .confirmation-card { padding: 1.5rem; }
+            .confirmation-icon { font-size: 3rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="main-nav" id="main-header" data-aos="fade-down" data-aos-duration="800">
+        <div class="container">
+            <div class="nav-logo">
+                <a href="index.html" aria-label="TicketMint Home">TicketMint</a> 
+            </div>
+            <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">
+                &#9776; 
+            </button>
+            <nav>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="index.html#faq">FAQ</a></li> 
+                    <li id="wallet-nav-item">
+                        <button class="button button-primary" id="connectWalletNavButtonConf">Connect Wallet</button>
+                        <div class="wallet-display-container" id="walletDisplayContainerConf" style="display: none;">
+                            <button class="wallet-button" id="walletDropdownButtonConf" aria-expanded="false" aria-controls="walletDropdownMenuConf">
+                                <span class="address" id="walletAddressDisplayConf"></span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-left: 5px;">
+                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu" id="walletDropdownMenuConf">
+                                <a href="#" class="dropdown-item" id="logoutButtonConf">Logout</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="confirmation-section" id="confirmationPage">
+            <div class="container">
+                <div class="confirmation-card" data-aos="zoom-in-up">
+                    <div class="confirmation-icon">🎉</div>
+                    <h1>Ticket Minted Successfully!</h1>
+                    <p class="lead">Congratulations! You're all set for an amazing experience.</p>
+
+                    <div class="nft-visual-placeholder">
+                        <h4>Your Unique NFT Ticket</h4>
+                        <p>Event: <strong id="nftEventName">Summer Blockchain Fest</strong></p>
+                        <p>Seat: <strong id="nftSeatNumber">-</strong></p>
+                        <p>Owner: <strong id="nftOwnerName">-</strong></p>
+                    </div>
+
+                    <div class="ticket-details">
+                        <h3>Booking Confirmation</h3>
+                        <div class="detail-item">
+                            <span class="label">Event:</span>
+                            <span class="value" id="confEventName">Summer Blockchain Fest</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Date:</span>
+                            <span class="value" id="confEventDate">July 20, 2025</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Venue:</span>
+                            <span class="value" id="confEventVenue">NYC Expo Center</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Ticket Holder:</span>
+                            <span class="value" id="confTicketHolder">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Seat Number:</span>
+                            <span class="value" id="confSeatNumber">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Price Paid:</span>
+                            <span class="value">0.001 ETH</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Transaction ID:</span>
+                            <span class="value" id="confTxId"><a href="#" target="_blank" rel="noopener noreferrer">0x123...abc</a></span>
+                        </div>
+                    </div>
+
+                    <p>Keep this confirmation safe. On event day, you'll generate a unique OTP code from your TicketMint account for check-in.</p>
+
+                    <div class="confirmation-actions">
+                        <a href="index.html" class="button button-primary">Back to Homepage</a>
+                        <button class="button button-secondary" id="viewOnWalletButton">View Ticket in Wallet (Simulated)</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <ul class="footer-links">
+                    <li><a href="index.html#about-us">About TicketMint</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="index.html#faq">Support Center</a></li>
+                </ul>
+                <div class="social-icons">
+                     <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+                    <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on Telegram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.002 8.6c-.145 1.322-.793 4.43-1.122 5.912-.292 1.31-.863 1.747-1.454 1.773-.878.04-1.424-.487-2.23-1.003-.92-.59-1.453-.953-2.27-1.528-.91-.638-.32-1.003.197-1.578.13-.145.953-1.018 1.018-1.103.13-.13.26-.015.086.086-.52.472-1.424 1.263-1.65 1.453-.21.174-.406.245-.682.16-.32-.1-.606-.245-.882-.406-.39-.23-.584-.35-.584-.752.014-.337.174-.666.98-1.23 2.08-1.438 3.487-2.308 3.916-2.563.086-.057.292-.13.42-.13.115 0 .19.014.246.043.07.03.085.07.085.16-.014.144-.043.39-.086.52z"></path></svg>
+                    </a>
+                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="TicketMint on GitHub">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.419 2.865 8.166 6.839 9.489.5.09.682-.218.682-.484 0-.238-.009-.868-.013-1.703-2.782.602-3.369-1.34-3.369-1.34-.455-1.158-1.11-1.468-1.11-1.468-.908-.62.069-.608.069-.608 1.004.071 1.532 1.03 1.532 1.03.891 1.529 2.341 1.089 2.91.833.091-.647.349-1.086.635-1.337-2.22-.252-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.682-.103-.254-.446-1.27.098-2.644 0 0 .84-.269 2.75 1.025A9.549 9.549 0 0 1 12 6.817c.85.004 1.705.115 2.504.338 1.91-1.294 2.748-1.025 2.748-1.025.546 1.374.203 2.39.099 2.644.64.698 1.028 1.591 1.028 2.682 0 3.842-2.337 4.687-4.565 4.935.358.307.678.917.678 1.849 0 1.334-.012 2.41-.012 2.736 0 .269.18.579.688.481A10.001 10.001 0 0 0 22 12c0-5.523-4.477-10-10-10z"></path></svg>
+                    </a>
+                </div>
+                <p class="copyright">&copy; 2025 TicketMint. Revolutionizing Event Access.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toastNotification" class="toast-notification" role="alert" aria-live="assertive"></div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        const navToggle = document.querySelector('.nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', () => {
+                const isExpanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
+                navToggle.setAttribute('aria-expanded', !isExpanded);
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // Wallet Connection and Display Logic (for confirmation page)
+        const connectWalletNavButtonConf = document.getElementById('connectWalletNavButtonConf');
+        const walletDisplayContainerConf = document.getElementById('walletDisplayContainerConf');
+        const walletAddressDisplayConf = document.getElementById('walletAddressDisplayConf');
+        const walletDropdownButtonConf = document.getElementById('walletDropdownButtonConf');
+        const walletDropdownMenuConf = document.getElementById('walletDropdownMenuConf');
+        const logoutButtonConf = document.getElementById('logoutButtonConf');
+        let connectedAccountConf = null; 
+
+        async function connectWalletConfPage() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    connectedAccountConf = accounts[0];
+                    updateWalletDisplayConf(connectedAccountConf);
+                    // No toast on confirmation page for re-connect, assume already connected from booking
+                } catch (error) {
+                    console.error("User rejected request or an error occurred", error);
+                    showToast("Wallet connection failed. Please try again.", "error");
+                    updateWalletDisplayConf(null);
+                }
+            } else {
+                showToast("MetaMask is not installed. Please install it to continue.", "error");
+                updateWalletDisplayConf(null);
+            }
+        }
+        
+        function updateWalletDisplayConf(account) {
+            if (account) {
+                walletAddressDisplayConf.textContent = `${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+                connectWalletNavButtonConf.style.display = 'none';
+                walletDisplayContainerConf.style.display = 'flex';
+            } else {
+                connectWalletNavButtonConf.style.display = 'inline-block';
+                walletDisplayContainerConf.style.display = 'none';
+                if(walletDropdownMenuConf) walletDropdownMenuConf.classList.remove('show');
+                if(walletDropdownButtonConf) walletDropdownButtonConf.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        if (connectWalletNavButtonConf) {
+            connectWalletNavButtonConf.addEventListener('click', connectWalletConfPage);
+        }
+        
+        if (walletDropdownButtonConf) {
+            walletDropdownButtonConf.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isExpanded = walletDropdownButtonConf.getAttribute('aria-expanded') === 'true';
+                walletDropdownButtonConf.setAttribute('aria-expanded', !isExpanded);
+                walletDropdownMenuConf.classList.toggle('show');
+            });
+        }
+
+        if (logoutButtonConf) {
+            logoutButtonConf.addEventListener('click', () => {
+                connectedAccountConf = null;
+                updateWalletDisplayConf(null);
+                showToast("Logged out successfully.");
+            });
+        }
+        
+        window.addEventListener('click', function(event) {
+          if (walletDropdownMenuConf && walletDropdownMenuConf.classList.contains('show')) {
+            if (!walletDropdownButtonConf.contains(event.target) && !walletDropdownMenuConf.contains(event.target)) {
+              walletDropdownMenuConf.classList.remove('show');
+              walletDropdownButtonConf.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
+
+        // Populate confirmation details (from URL params or localStorage for demo)
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const seat = params.get('seat') || 'A1'; // Default if not found
+            const name = params.get('name') || 'John Doe';
+            const txId = params.get('tx') || `0x${Math.random().toString(16).substr(2, 10)}...${Math.random().toString(16).substr(2, 10)}`;
+
+            document.getElementById('confTicketHolder').textContent = name;
+            document.getElementById('confSeatNumber').textContent = seat;
+            document.getElementById('nftOwnerName').textContent = name;
+            document.getElementById('nftSeatNumber').textContent = seat;
+            
+            const txLink = document.getElementById('confTxId').querySelector('a');
+            if (txLink) {
+                txLink.textContent = txId;
+                txLink.href = `https://etherscan.io/tx/${txId}`; // Example link
+            }
+
+            // Simulate wallet connection from previous page
+            // In a real app, this state would be managed more robustly (e.g., via localStorage or context)
+            const mockConnectedAccount = localStorage.getItem('mockWalletAddress'); // Check if we have a mock address
+            if (mockConnectedAccount) {
+                connectedAccountConf = mockConnectedAccount;
+                updateWalletDisplayConf(connectedAccountConf);
+            } else {
+                 // If no mock address, try to connect or show connect button
+                updateWalletDisplayConf(null); // Ensures connect button shows if no mock address
+            }
+
+            const viewOnWalletButton = document.getElementById('viewOnWalletButton');
+            if(viewOnWalletButton) {
+                viewOnWalletButton.addEventListener('click', () => {
+                    showToast("Simulating opening wallet to view NFT... (Feature not implemented)", "info");
+                });
+            }
+        });
+
+        let toastTimeout;
+        function showToast(message, type = "success") { 
+            const toast = document.getElementById('toastNotification');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.className = 'toast-notification'; 
+            if (type === 'error') toast.classList.add('error');
+            else if (type === 'info') toast.style.backgroundColor = 'var(--primary-accent)'; // Custom info color
+            else toast.style.backgroundColor = 'var(--success-color)';
+
+            toast.classList.add('show'); 
+            clearTimeout(toastTimeout); 
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000); 
+        }
+    </script>
+</body>
+</html>
