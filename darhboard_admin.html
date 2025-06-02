@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketMint: Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --primary-accent: #66d7ee;
+            --primary-accent-rgb: 102, 215, 238;
+            --secondary-accent: #ee6d66;
+            --neutral-text: #e4e4e4;
+            --muted-text: #a0a0a0;
+            --card-bg: #161b22;
+            --card-bg-darker: #101419;
+            --border-color: #30363d;
+            --input-bg-color: #1c2128;
+            --font-main: 'Inter', sans-serif;
+            --success-color: #28a745;
+            --error-color: var(--secondary-accent);
+            --warning-color: #ffc107;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--neutral-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .admin-container { width: 95%; max-width: 1400px; margin-left: auto; margin-right: auto; padding: 0 1.5rem; }
+        main.admin-main { flex-grow: 1; padding-top: 5rem; /* Space for fixed header */ }
+
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; margin-bottom: 0.75rem; color: var(--neutral-text); }
+        h1 { font-size: 2.2rem; font-weight: 700; }
+        h2 { font-size: 1.8rem; font-weight: 600; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.4rem; font-weight: 600; }
+        p { margin-bottom: 1rem; color: var(--muted-text); font-size: 1rem; }
+        
+        a { color: var(--primary-accent); text-decoration: none; transition: color 0.3s ease; }
+        a:hover, a:focus { color: var(--secondary-accent); outline: 2px solid var(--primary-accent); outline-offset: 2px; }
+        
+        button, .button {
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem; 
+            padding: 0.75rem 1.5rem; 
+            font-family: var(--font-main); font-size: 0.95rem;
+            font-weight: 600; text-align: center; text-decoration: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .button svg { width: 1em; height: 1em; }
+
+        .button-primary { background-color: var(--primary-accent); color: var(--bg-color); }
+        .button-primary:hover:not(:disabled), .button-primary:focus:not(:disabled) { transform: scale(1.03); background-color: #52c5d6; box-shadow: 0 4px 15px rgba(102, 215, 238, 0.2); }
+        .button-secondary { background-color: var(--card-bg); color: var(--primary-accent); border: 1px solid var(--primary-accent); }
+        .button-secondary:hover:not(:disabled), .button-secondary:focus:not(:disabled) { transform: scale(1.03); background-color: rgba(102, 215, 238, 0.1); box-shadow: 0 4px 15px rgba(102, 215, 238, 0.1); }
+        .button-success { background-color: var(--success-color); color: white; }
+        .button-success:hover:not(:disabled), .button-success:focus:not(:disabled) { transform: scale(1.03); background-color: #218838; box-shadow: 0 4px 15px rgba(40,167,69,0.2); }
+        .button-danger { background-color: var(--secondary-accent); color: var(--bg-color); }
+        .button-danger:hover:not(:disabled), .button-danger:focus:not(:disabled) { transform: scale(1.03); background-color: #d95952; box-shadow: 0 4px 15px rgba(238, 109, 102, 0.2); }
+        .button-warning { background-color: var(--warning-color); color: var(--bg-color); }
+        .button-warning:hover:not(:disabled), .button-warning:focus:not(:disabled) { transform: scale(1.03); background-color: #ffb000; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2); }
+        
+        button:disabled, .button:disabled {
+            background-color: var(--muted-text) !important;
+            border-color: var(--muted-text) !important;
+            color: #555 !important;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+            opacity: 0.6;
+        }
+
+        .text-center { text-align: center; }
+
+        /* Admin Header */
+        .admin-header {
+            background-color: var(--card-bg-darker);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .admin-header .admin-container { display: flex; justify-content: space-between; align-items: center; }
+        .admin-logo a { font-size: 1.75rem; font-weight: 800; color: var(--neutral-text); }
+        .admin-logo a:hover { color: var(--primary-accent); }
+        .admin-nav ul { list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+        .admin-nav ul li a, .admin-nav ul li button {
+            color: var(--muted-text); font-weight: 500; padding: 0.5rem 1rem;
+            border-radius: 6px; transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .admin-nav ul li a:hover, .admin-nav ul li button:hover,
+        .admin-nav ul li a.active, .admin-nav ul li button.active {
+            background-color: var(--primary-accent);
+            color: var(--bg-color);
+        }
+        .admin-user-menu .wallet-button { font-size: 0.9rem; padding: 0.5rem 1rem; }
+        .admin-user-menu .dropdown-menu { min-width: 180px; }
+
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .dashboard-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .dashboard-card .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .dashboard-card .card-content p { font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .dashboard-card .card-content strong { color: var(--neutral-text); font-weight: 600; }
+        .dashboard-card .card-actions { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        
+        .stat-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .stat-item .label { color: var(--muted-text); }
+        .stat-item .value { font-size: 1.3rem; font-weight: 700; color: var(--neutral-text); }
+        .status-badge {
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-not-started { background-color: var(--muted-text); color: var(--bg-color); }
+        .status-live { background-color: var(--success-color); color: white; animation: pulse-live 1.5s infinite; }
+        .status-ended { background-color: var(--secondary-accent); color: var(--bg-color); }
+
+        @keyframes pulse-live {
+            0% { box-shadow: 0 0 0 0 rgba(var(--success-color-rgb, 40, 167, 69), 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(var(--success-color-rgb, 40, 167, 69), 0); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--success-color-rgb, 40, 167, 69), 0); }
+        }
+        :root { --success-color-rgb: 40, 167, 69; } /* Define for animation */
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Above everything else */
+            padding: 1rem;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px; /* Max width of modal */
+            position: relative;
+            animation: slideInModal 0.3s ease-out;
+        }
+        @keyframes slideInModal {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h3 {
+            margin-bottom: 0;
+            color: var(--primary-accent);
+        }
+        .modal-close-button {
+            background: none;
+            border: none;
+            color: var(--muted-text);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+        .modal-close-button:hover {
+            color: var(--neutral-text);
+        }
+        .modal-body .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .modal-body .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--muted-text);
+        }
+        .modal-body .form-group input[type="text"],
+        .modal-body .form-group input[type="date"],
+        .modal-body .form-group input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg-color);
+            color: var(--neutral-text);
+            font-family: var(--font-main);
+            font-size: 1rem;
+        }
+         .modal-body .form-group input[type="number"]::-webkit-inner-spin-button,
+         .modal-body .form-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .modal-body .form-group input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        .modal-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+
+        /* Toast Notification */
+        .toast-notification { /* Same as other pages */ }
+        .toast-notification.show { /* Same as other pages */ }
+        .toast-notification.error { /* Same as other pages */ }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-header .admin-container { flex-direction: column; gap: 1rem; }
+            .admin-nav ul { flex-wrap: wrap; justify-content: center; }
+            main.admin-main { padding-top: 8rem; } 
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header class="admin-header" id="admin-main-header" data-aos="fade-down">
+        <div class="admin-container">
+            <div class="admin-logo">
+                <a href="#">TicketMint Admin</a>
+            </div>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="#" class="active">Dashboard</a></li>
+                    <li><a href="#">Event Settings</a></li>
+                    <li><a href="#">Seat Verification</a></li>
+                    <li><a href="#">Withdrawals</a></li>
+                </ul>
+            </nav>
+            <div class="admin-user-menu">
+                <div class="wallet-display-container" id="adminWalletDisplayContainer">
+                    <button class="wallet-button" id="adminWalletDropdownButton" aria-expanded="false" aria-controls="adminWalletDropdownMenu">
+                        <span class="address" id="adminWalletAddressDisplay">0xAdmin...Addr</span> 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-left: 5px;">
+                            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="adminWalletDropdownMenu">
+                        <a href="#" class="dropdown-item" id="adminLogoutButton">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <section id="admin-dashboard-section">
+            <div class="admin-container">
+                <h1 data-aos="fade-up">Admin Dashboard</h1>
+                
+                <div class="dashboard-card" data-aos="fade-up" data-aos-delay="100">
+                    <h2 class="card-title">Event Overview: <span id="eventNameDisplay">Summer Blockchain Fest</span></h2>
+                    <div class="card-content">
+                        <div class="stat-item">
+                            <span class="label">Status:</span>
+                            <span class="status-badge status-not-started" id="eventStatusBadge">Not Started</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Date:</span>
+                            <strong id="eventDateDisplay">July 20, 2025</strong>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Location:</span>
+                            <strong id="eventLocationDisplay">NYC Expo Center</strong>
+                        </div>
+                         <div class="stat-item">
+                            <span class="label">Ticket Price:</span>
+                            <strong id="eventPriceDisplay">0.001 ETH</strong>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="button button-secondary" id="openEditEventModalButton">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                            Edit Event Info
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card" data-aos="fade-up" data-aos-delay="200">
+                        <h3 class="card-title">Ticket Sales & Attendance</h3>
+                        <div class="card-content">
+                            <div class="stat-item">
+                                <span class="label">Total Seats:</span>
+                                <span class="value" id="totalSeatsStat">80</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="label">Seats Sold (Booked):</span>
+                                <span class="value" id="seatsSoldStat">35</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="label">Seats Available:</span>
+                                <span class="value" id="seatsAvailableStat">45</span>
+                            </div>
+                             <div class="stat-item">
+                                <span class="label">Checked-in Attendees:</span>
+                                <span class="value" id="checkedInStat">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card" data-aos="fade-up" data-aos-delay="300">
+                        <h3 class="card-title">Event Lifecycle Control</h3>
+                        <div class="card-content">
+                            <p>Manage the current state of the event.</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="button button-success" id="startEventButton">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                Start Event
+                            </button>
+                            <button class="button button-danger" id="stopEventButton" style="display:none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                                Stop Event
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card" data-aos="fade-up" data-aos-delay="400">
+                        <h3 class="card-title">Seat Verification</h3>
+                        <div class="card-content">
+                            <p>Access the tool to verify attendee OTPs and manage check-ins.</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="button button-primary" id="goToVerificationButton" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.414-1.414l-.707.707a1 1 0 101.414 1.414l.707-.707zm-4.12 8.54a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM15.311 10a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26z" clip-rule="evenodd"></path><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.74.958l-.699-.404a1 1 0 00-1.214.866l-.06.404a1 1 0 00.867 1.214l.403.061a4.535 4.535 0 00-.404.699l-.958 1.74a1 1 0 00.258.966l.518 1.932a1 1 0 001.932-.518l-.259-.966a4.535 4.535 0 001.74-.958l.699.404a1 1 0 001.214-.866l.06-.404a1 1 0 00-.867-1.214l-.403-.061a4.535 4.535 0 00.404-.699l.958-1.74a1 1 0 00-.258-.966l-.518-1.932z"></path></svg>
+                                Open Verification Tool
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card" data-aos="fade-up" data-aos-delay="500">
+                        <h3 class="card-title">Financials</h3>
+                        <div class="card-content">
+                             <div class="stat-item">
+                                <span class="label">Total Revenue (ETH):</span>
+                                <strong class="value" id="totalRevenueStat">0.035 ETH</strong>
+                            </div>
+                            <p>Manage and withdraw funds collected from ticket sales.</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="button button-warning" id="withdrawFundsButton" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.5 2.5 0 00-.567-.267C8.07 8.34 8 8.432 8 8.514v5.022a2.5 2.5 0 00.933 1.785.5.5 0 00.567.267v1.698c-.22.071-.412.164-.567.267A1.5 1.5 0 019 18.514V5.486A1.5 1.5 0 018.433 4.002c.155.103.346.196.567.267V2.586A2.5 2.5 0 007.5 2a1 1 0 00-1 .971V4.002c-.155-.103-.346-.196-.567-.267V2.586A2.5 2.5 0 004.5 2a1 1 0 00-1 .971V17.03c0 .536.434.971.971.971a2.5 2.5 0 001.964-.918c.155.103.346.196.567.267v1.698a.5.5 0 00.567.267A2.5 2.5 0 009.5 20h1a2.5 2.5 0 002.5-2.5v-1.698a.5.5 0 00.567-.267A2.5 2.5 0 0014.03 17.03V4.971a1 1 0 00-1-.971 2.5 2.5 0 00-1.964.918c-.155-.103-.346-.196-.567-.267V2.586A.5.5 0 0010.5 2h-1A2.5 2.5 0 007.036 2.586v1.698c.22-.071.412-.164.567-.267A1.5 1.5 0 019 5.486v10.028a1.5 1.5 0 01-.433 1.014z"></path></svg>
+                                Withdraw Funds
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="editEventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Event Information</h3>
+                <button class="modal-close-button" id="closeEditEventModalButton" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEventForm">
+                    <div class="form-group">
+                        <label for="modalEventName">Event Title:</label>
+                        <input type="text" id="modalEventName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalEventDate">Event Date:</label>
+                        <input type="date" id="modalEventDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalEventLocation">Event Location:</label>
+                        <input type="text" id="modalEventLocation" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalEventPrice">Ticket Price (ETH):</label>
+                        <input type="number" id="modalEventPrice" step="0.001" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button button-secondary" id="cancelEditEventButton">Cancel</button>
+                <button type="submit" form="editEventForm" class="button button-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toastNotification" class="toast-notification" role="alert" aria-live="assertive"></div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        // Navbar wallet display logic
+        const adminWalletDisplayContainer = document.getElementById('adminWalletDisplayContainer');
+        const adminWalletDropdownButton = document.getElementById('adminWalletDropdownButton');
+        const adminWalletDropdownMenu = document.getElementById('adminWalletDropdownMenu');
+        const adminLogoutButton = document.getElementById('adminLogoutButton');
+
+        if (adminWalletDropdownButton) {
+            adminWalletDropdownButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isExpanded = adminWalletDropdownButton.getAttribute('aria-expanded') === 'true';
+                adminWalletDropdownButton.setAttribute('aria-expanded', !isExpanded);
+                adminWalletDropdownMenu.classList.toggle('show');
+            });
+        }
+        if (adminLogoutButton) {
+            adminLogoutButton.addEventListener('click', () => {
+                adminWalletDropdownMenu.classList.remove('show');
+                adminWalletDropdownButton.setAttribute('aria-expanded', 'false');
+                showToast("Admin logged out (Simulated).");
+            });
+        }
+        window.addEventListener('click', function(event) {
+          if (adminWalletDropdownMenu && adminWalletDropdownMenu.classList.contains('show')) {
+            if (!adminWalletDropdownButton.contains(event.target) && !adminWalletDropdownMenu.contains(event.target)) {
+              adminWalletDropdownMenu.classList.remove('show');
+              adminWalletDropdownButton.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
+
+        // Event Lifecycle and Button State Management
+        const startEventButton = document.getElementById('startEventButton');
+        const stopEventButton = document.getElementById('stopEventButton');
+        const eventStatusBadge = document.getElementById('eventStatusBadge');
+        const goToVerificationButton = document.getElementById('goToVerificationButton');
+        const withdrawFundsButton = document.getElementById('withdrawFundsButton');
+        
+        let currentEventState = "Not Started"; 
+
+        function updateButtonStates() {
+            goToVerificationButton.disabled = currentEventState !== "Live";
+            withdrawFundsButton.disabled = currentEventState !== "Ended";
+            
+            if (currentEventState === "Not Started") {
+                startEventButton.style.display = 'inline-flex';
+                stopEventButton.style.display = 'none';
+                eventStatusBadge.className = 'status-badge status-not-started';
+                eventStatusBadge.textContent = "Not Started";
+            } else if (currentEventState === "Live") {
+                startEventButton.style.display = 'none';
+                stopEventButton.style.display = 'inline-flex';
+                eventStatusBadge.className = 'status-badge status-live';
+                eventStatusBadge.textContent = "Live";
+            } else if (currentEventState === "Ended") {
+                startEventButton.style.display = 'inline-flex'; // Or a "Create New Event" button
+                stopEventButton.style.display = 'none';
+                eventStatusBadge.className = 'status-badge status-ended';
+                eventStatusBadge.textContent = "Ended";
+            }
+        }
+
+        if(startEventButton) {
+            startEventButton.addEventListener('click', () => {
+                currentEventState = "Live";
+                updateButtonStates();
+                showToast("Event has been started!", "success");
+            });
+        }
+
+        if(stopEventButton) {
+            stopEventButton.addEventListener('click', () => {
+                currentEventState = "Ended";
+                updateButtonStates();
+                showToast("Event has been ended.", "warning");
+            });
+        }
+        
+        // Edit Event Modal Logic
+        const editEventModal = document.getElementById('editEventModal');
+        const openEditEventModalButton = document.getElementById('openEditEventModalButton');
+        const closeEditEventModalButton = document.getElementById('closeEditEventModalButton');
+        const cancelEditEventButton = document.getElementById('cancelEditEventButton');
+        const editEventForm = document.getElementById('editEventForm');
+
+        const eventNameDisplay = document.getElementById('eventNameDisplay');
+        const eventDateDisplay = document.getElementById('eventDateDisplay');
+        const eventLocationDisplay = document.getElementById('eventLocationDisplay');
+        const eventPriceDisplay = document.getElementById('eventPriceDisplay');
+
+        const modalEventNameInput = document.getElementById('modalEventName');
+        const modalEventDateInput = document.getElementById('modalEventDate');
+        const modalEventLocationInput = document.getElementById('modalEventLocation');
+        const modalEventPriceInput = document.getElementById('modalEventPrice');
+
+        if (openEditEventModalButton) {
+            openEditEventModalButton.addEventListener('click', () => {
+                // Populate modal with current values
+                modalEventNameInput.value = eventNameDisplay.textContent;
+                // Date needs YYYY-MM-DD format for input type="date"
+                // Assuming eventDateDisplay.textContent is "Month DD, YYYY"
+                try {
+                    const dateObj = new Date(eventDateDisplay.textContent);
+                    const year = dateObj.getFullYear();
+                    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                    const day = dateObj.getDate().toString().padStart(2, '0');
+                    modalEventDateInput.value = `${year}-${month}-${day}`;
+                } catch (e) {
+                    console.error("Error parsing date for modal:", e);
+                    modalEventDateInput.value = ''; // fallback
+                }
+                modalEventLocationInput.value = eventLocationDisplay.textContent;
+                modalEventPriceInput.value = parseFloat(eventPriceDisplay.textContent);
+                
+                editEventModal.classList.add('show');
+            });
+        }
+
+        function closeModal() {
+            editEventModal.classList.remove('show');
+        }
+
+        if (closeEditEventModalButton) closeEditEventModalButton.addEventListener('click', closeModal);
+        if (cancelEditEventButton) cancelEditEventButton.addEventListener('click', closeModal);
+        
+        // Close modal if overlay is clicked
+        if (editEventModal) {
+            editEventModal.addEventListener('click', function(event) {
+                if (event.target === editEventModal) {
+                    closeModal();
+                }
+            });
+        }
+
+
+        if (editEventForm) {
+            editEventForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                // Update dashboard display
+                eventNameDisplay.textContent = modalEventNameInput.value;
+                
+                // Format date for display
+                const dateValue = modalEventDateInput.value;
+                if (dateValue) {
+                    const [year, month, day] = dateValue.split('-');
+                    const displayDate = new Date(year, month - 1, day).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    eventDateDisplay.textContent = displayDate;
+                } else {
+                    eventDateDisplay.textContent = "N/A";
+                }
+
+                eventLocationDisplay.textContent = modalEventLocationInput.value;
+                eventPriceDisplay.textContent = parseFloat(modalEventPriceInput.value).toFixed(3) + " ETH"; // Keep 3 decimal places for ETH
+                
+                closeModal();
+                showToast("Event information updated successfully!", "success");
+            });
+        }
+        
+        // Dummy button actions for other dashboard cards
+        if(goToVerificationButton) {
+            goToVerificationButton.addEventListener('click', () => {
+                if (!goToVerificationButton.disabled) {
+                    showToast("Opening Seat Verification tool... (Not Implemented)", "info");
+                }
+            });
+        }
+        if(withdrawFundsButton) {
+            withdrawFundsButton.addEventListener('click', () => {
+                if (!withdrawFundsButton.disabled) {
+                    showToast("Initiating fund withdrawal... (Not Implemented)", "info");
+                }
+            });
+        }
+
+
+        // Toast Notification
+        let toastTimeout;
+        function showToast(message, type = "success") { 
+            const toast = document.getElementById('toastNotification');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.className = 'toast-notification'; 
+            toast.style.backgroundColor = ''; 
+
+            if (type === 'error') {
+                toast.classList.add('error');
+                 toast.style.backgroundColor = 'var(--error-color)';
+            } else if (type === 'info') {
+                 toast.style.backgroundColor = 'var(--primary-accent)';
+                 toast.style.color = 'var(--bg-color)';
+            } else if (type === 'warning') {
+                 toast.style.backgroundColor = 'var(--warning-color)';
+                 toast.style.color = 'var(--bg-color)';
+            }
+             else { 
+                 toast.style.backgroundColor = 'var(--success-color)';
+                 toast.style.color = 'white';
+            }
+            toast.classList.add('show'); 
+            clearTimeout(toastTimeout); 
+            toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000); 
+        }
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            updateButtonStates(); 
+            const adminWalletAddress = "0xAdminWallet123...7890"; 
+            document.getElementById('adminWalletAddressDisplay').textContent = `${adminWalletAddress.substring(0, 6)}...${adminWalletAddress.substring(adminWalletAddress.length - 4)}`;
+        });
+
+    </script>
+</body>
+</html>
